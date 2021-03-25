@@ -30,6 +30,7 @@ from pprint import pprint as pp
 from datetime import datetime
 from datetime import timedelta
 
+
 ###########Global Varaible ##################
 DISABLE_CXT_TYPE_NONE = 0
 DISABLE_CXT_TYPE_REPLY = 1
@@ -40,7 +41,7 @@ DISABLE_CXT_TYPE_RETWEET = 2
 # Global variables
 #  the context data will link to PHEME 6392078 dataset directory
 # Note: better to keep this symlink directory name general (as "aug-rnr-annotated-threads-retweets") and you can link it to your local/specific name
-social_context_data_dir = os.path.join(os.path.dirname(__file__),  '..', "data", "social_context","aug-rnr-annotated-threads-retweets")
+social_context_data_dir = os.path.join(os.path.dirname(__file__),  '..', "data", "social_context","botdetection")
 # =============================================================
 
 
@@ -127,7 +128,8 @@ def load_source_tweet_context(source_tweet_id: Text, event_end_timedelta: timede
     source_tweet_json = load_source_tweet_json(source_tweet_id)
 
     event_end_time = None
-    event_start_time =datetime.strptime(source_tweet_json["created_at"], '%a %b %d %H:%M:%S %z %Y')
+    # event_start_time =datetime.strptime(source_tweet_json["created_at"], '%a %b %d %H:%M:%S %z %Y')
+    event_start_time =datetime.strptime(source_tweet_json["timestamp"], '%Y-%m-%d %H:%M:%S')
     if event_end_timedelta:
         event_end_time = event_start_time + event_end_timedelta
 
@@ -275,7 +277,8 @@ def load_matrix_from_csv(fname, start_col_index, end_col_index, delimiter=',', e
 
     df = pd.read_csv(fname, header=header, delimiter=delimiter, quoting=csv.QUOTE_MINIMAL,
                      usecols=range(start_col_index, end_col_index), lineterminator='\n',
-                     encoding=encoding).as_matrix()
+                     encoding=encoding).values
+                     # encoding=encoding).as_matrix()
     return df
 
 

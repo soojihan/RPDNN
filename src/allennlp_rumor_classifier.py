@@ -68,6 +68,10 @@ from context_features_extractor import context_feature_extraction_from_context_s
 from data_loader import load_source_tweet_json, load_source_tweet_context, readlink_on_windows, load_abs_path
 from data_loader import DISABLE_CXT_TYPE_RETWEET
 
+# print(allennlp.__version__)
+# 0.9.0
+
+
 # from context_features_extractor import context_feature_extraction
 # https://github.com/mhagiwara/realworldnlp/blob/master/examples/sentiment/sst_classifier.py
 
@@ -167,7 +171,8 @@ class RumorTweetsDataReader(DatasetReader):
 
         df = pd.read_csv(fname, header=header, delimiter=delimiter, quoting=csv.QUOTE_MINIMAL,
                          usecols=range(start_col_index, end_col_index), lineterminator='\n',
-                         encoding=encoding).as_matrix()
+                         encoding=encoding).values
+                         # encoding=encoding).as_matrix()
         return df
 
 
@@ -520,16 +525,61 @@ class RumorTweetsClassifer(Model):
 
         timestamped_print("rumor_representation before feedforward: %s" % str(rumor_representation.shape))
         logits = self.classifier_feedforward(rumor_representation)
+        print("logits device ", logits.get_device())
+        logits = logits.cpu()
 
         # In AllenNLP, the output of forward() is a dictionary.
         # Your output dictionary must contain a "loss" key for your model to be trained.
         output_dict = {"logits": logits}
+        print(tweet_id)
+        output_dict['tweetID']= tweet_id
+        print("logits shape ", logits.shape)
+        ######################################################################################
+        class_probabilities = F.softmax(output_dict['logits'], dim=1)
+        output_dict['class_probabilities'] = class_probabilities
 
+        predictions = class_probabilities.cpu().data.numpy()
+        argmax_indices = np.argmax(predictions, axis=-1)
+        labels = [self.vocab.get_token_from_index(x, namespace="label")
+                  for x in argmax_indices]
+        output_dict['label'] = labels
+        ########################################################################
         if label is not None:
+            print("label device ", label.get_device())
+            label = label.cpu()
             loss = self.loss_function(logits, label.squeeze(-1))
             for metric in self.metrics.values():
                 metric(logits, label.squeeze(-1))
             output_dict["loss"] = loss
+
+        import time
+        model_timestamp_version = datetime.fromtimestamp(time.time()).strftime('%H:%M:%S:%f')
+        PATH = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output", model_timestamp_version + '_' +  tweet_id[0] + '_' +  "output.tar")
+        # PATH = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output",  model_timestamp_version + "_output.tar")
+        # time.sleep(0.1)
+        print("Saving batch output in ", PATH)
+
+        # with open(PATH, 'wb') as f:
+        #     torch.save(output_dict, f)
+
+        torch.save(output_dict, os.path.join(PATH))
+
+
+        # import copy
+        #
+        # newoutput_dict = copy.deepcopy(output_dict)
+        # newoutput_dict['class_probabilities'] = newoutput_dict['class_probabilities'].cpu().data.numpy()
+        # newoutput_dict['logits'] = newoutput_dict['logits'].cpu().data.numpy()
+        # newoutput_dict['loss'] = newoutput_dict['loss'].cpu().data.numpy()
+        # import time
+        # model_timestamp_version = datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M')
+        # output_file = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output",  str(batch_count)+ model_timestamp_version + "_output.pkl")
+        # import json
+        # import pickle
+        # if output_file:
+        #     with open(output_file, "wb") as file:
+        #         pickle.dump(newoutput_dict, file)
+        #     file.close()
 
         return output_dict
 
@@ -539,6 +589,7 @@ class RumorTweetsClassifer(Model):
         Does a simple argmax over the class probabilities, converts indices to string labels, and
         adds a ``"label"`` key to the dictionary with the result.
         """
+        print("DECODE output_dict['logits'] size ", output_dict['logits'].shape)
         class_probabilities = F.softmax(output_dict['logits'], dim=2)
         output_dict['class_probabilities'] = class_probabilities
 
@@ -1014,7 +1065,8 @@ class RumorTweetsClassifer(Model):
             try:
                 source_tweet_user_id = source_tweet['user']['id_str']
                 source_tweet_text = source_tweet["text"] if "text" in source_tweet else source_tweet["full_text"]
-                source_tweet_timestamp = datetime.strptime(source_tweet['created_at'], '%a %b %d %H:%M:%S %z %Y')
+                # source_tweet_timestamp = datetime.strptime(source_tweet['created_at'], '%a %b %d %H:%M:%S %z %Y')
+                source_tweet_timestamp = datetime.strptime(source_tweet['timestamp'], '%Y-%m-%d %H:%M:%S')
                 source_tweet_user_name = '@' + source_tweet['user']['screen_name']
 
                 # We need a maximum number of context (or a strategy to filter non-informative context), say max 500
@@ -1503,13 +1555,15 @@ def evaluation(evaluation_data_path, model_in_memory: Model, data_iterator: Data
 
     from training_util import evaluate
 
+
     metrics = evaluate(model_in_memory, test_instances, data_iterator, cuda_device, "")
     timestamped_print("Finished evaluating.")
     timestamped_print("Metrics:")
     for key, metric in metrics.items():
         timestamped_print("%s: %s" % (key, metric))
 
-    output_file = os.path.join(os.path.dirname(__file__), '..', "data", "test", output_file_prefix + "_eval.json")
+    output_file = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "test", output_file_prefix + "_eval.json")
+    print("Save eval results ", output_file)
     import json
     if output_file:
         with open(output_file, "w") as file:

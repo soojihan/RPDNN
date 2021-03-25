@@ -296,10 +296,12 @@ def evaluate(model: Model,
     check_for_gpu(cuda_device)
     with torch.no_grad():
         model.eval()
+        # print("instances test ", instances)
 
         iterator = data_iterator(instances,
                                  num_epochs=1,
                                  shuffle=False)
+
         logger.info("Iterating over dataset")
         generator_tqdm = Tqdm.tqdm(iterator, total=data_iterator.get_num_batches(instances))
 
@@ -316,6 +318,23 @@ def evaluate(model: Model,
             batch_count += 1
             batch = nn_util.move_to_device(batch, cuda_device)
             output_dict = model(**batch)
+            print("output_dict keys ", output_dict.keys())
+            print(output_dict['class_probabilities'].shape)
+            import copy
+
+            newoutput_dict = copy.deepcopy(output_dict)
+            newoutput_dict['class_probabilities'] = newoutput_dict['class_probabilities'].cpu().data.numpy()
+            newoutput_dict['logits'] = newoutput_dict['logits'].cpu().data.numpy()
+            newoutput_dict['loss'] = newoutput_dict['loss'].cpu().data.numpy()
+
+            output_file = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "test", str(batch_count) + "_output.pkl")
+            import json
+            import pickle
+            if output_file:
+                with open(output_file, "wb") as file:
+                    pickle.dump(newoutput_dict, file)
+                file.close()
+
             loss = output_dict.get("loss")
 
             metrics = model.get_metrics()
@@ -394,7 +413,7 @@ def social_context_dataset_statistics():
     """
     # social_context_data_dir = "C:\\Data\\NLP-corpus\\aug_rnr\\twitter1516"
     from data_loader import load_abs_path
-    social_context_data_dir = os.path.join(os.path.dirname(__file__),  '..', "data", "social_context","aug-rnr-annotated-threads-retweets")
+    social_context_data_dir = os.path.join(os.path.dirname(__file__),  '..', "data", "social_context","botdetection")
     social_context_data_dir = load_abs_path(social_context_data_dir)
 
     print("check social context corpus [%s] ... " % social_context_data_dir)

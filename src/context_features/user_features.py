@@ -28,8 +28,11 @@ def get_user_history_tweeting_rumours(context_tweets_dataset_dir_dict: dict):
             with open(os.path.join(source_tweet_data_dir, source_tweet_json_dataset[0]), 'r') as f:
                 source_tweet_json = json.load(f)
             if rumour_type == "rumours":
-                tweet_ids_tweeted_rumours.append((datetime.strptime(source_tweet_json["created_at"],
-                                                                    '%a %b %d %H:%M:%S %z %Y'),
+                # tweet_ids_tweeted_rumours.append((datetime.strptime(source_tweet_json["created_at"],
+                                                                    # '%a %b %d %H:%M:%S %z %Y'),
+                                                  # source_tweet_json['user']['id_str']))
+                tweet_ids_tweeted_rumours.append((datetime.strptime(source_tweet_json["timestamp"],
+                                                   '%Y-%m-%d %H:%M:%S'),
                                                   source_tweet_json['user']['id_str']))
 
     sorted_tweet_ids_tweeted_rumours = sorted(tweet_ids_tweeted_rumours[:], key=operator.itemgetter(0), reverse=False)

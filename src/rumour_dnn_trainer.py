@@ -140,7 +140,7 @@ if __name__ == '__main__':
                                                                                     "elmo_credbank_2x4096_512_2048cnn_2xhighway_weights_10052019.hdf5"))
 
     data_loader.social_context_data_dir = os.path.join(os.path.dirname(__file__), '..', "data", "social_context",
-                                                       "aug-rnr-annotated-threads-retweets")
+                                                       "botdetection")
 
     print("Fine-tuned ELMo model is set to [%s]" % allennlp_rumor_classifier.elmo_credbank_model_path)
     print("social context corpus for all events directory is set to [%s]" % data_loader.social_context_data_dir)

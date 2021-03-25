@@ -181,10 +181,13 @@ def context_feature_extraction(source_tweet_context_dataset, source_tweet, conte
         source_text = source_tweet['text']
     else:
         raise ValueError
-    source_tweet_timestamp = source_tweet['created_at']
+    # source_tweet_timestamp = source_tweet['created_at']
+    source_tweet_timestamp = source_tweet['timestamp']
+    # source_tweet_timestamp = datetime.strptime(source_tweet_timestamp, '%a %b %d %H:%M:%S %z %Y')
+    source_tweet_timestamp = datetime.strptime(source_tweet_timestamp, '%Y-%m-%d %H:%M:%S')
     source_tweet_user_id = source_tweet['user']['id_str']
 
-    source_tweet_timestamp = datetime.strptime(source_tweet_timestamp, '%a %b %d %H:%M:%S %z %Y')
+    
     # source_tweet_user_id = source_tweet['user']['id_str']
     reply_to_user = '@' + source_user_name
 
@@ -285,7 +288,8 @@ def compute_global_values_4_all_dataset_numercial_features():
 
         source_tweet_user_id = source_tweet_json['user']['id_str']
         source_tweet_text = source_tweet_json["text"] if "text" in source_tweet_json else source_tweet_json["full_text"]
-        source_tweet_timestamp = datetime.strptime(source_tweet_json['created_at'], '%a %b %d %H:%M:%S %z %Y')
+        # source_tweet_timestamp = datetime.strptime(source_tweet_json['created_at'], '%a %b %d %H:%M:%S %z %Y')
+        source_tweet_timestamp = datetime.strptime(source_tweet_json['timestamp'], '%Y-%m-%d %H:%M:%S')
         source_tweet_user_name = '@' + source_tweet_json['user']['screen_name']
 
         # from September, experiment showed the evidence that retweets data is very noisy. we now focus on reply content and metadata
