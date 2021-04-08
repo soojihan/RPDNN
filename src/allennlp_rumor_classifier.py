@@ -68,10 +68,6 @@ from context_features_extractor import context_feature_extraction_from_context_s
 from data_loader import load_source_tweet_json, load_source_tweet_context, readlink_on_windows, load_abs_path
 from data_loader import DISABLE_CXT_TYPE_RETWEET
 
-# print(allennlp.__version__)
-# 0.9.0
-
-
 # from context_features_extractor import context_feature_extraction
 # https://github.com/mhagiwara/realworldnlp/blob/master/examples/sentiment/sst_classifier.py
 
@@ -552,17 +548,17 @@ class RumorTweetsClassifer(Model):
                 metric(logits, label.squeeze(-1))
             output_dict["loss"] = loss
 
-        import time
-        model_timestamp_version = datetime.fromtimestamp(time.time()).strftime('%H:%M:%S:%f')
-        PATH = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output", model_timestamp_version + '_' +  tweet_id[0] + '_' +  "output.tar")
-        # PATH = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output",  model_timestamp_version + "_output.tar")
-        # time.sleep(0.1)
-        print("Saving batch output in ", PATH)
+        # import time
+        # model_timestamp_version = datetime.fromtimestamp(time.time()).strftime('%H:%M:%S:%f')
+        # PATH = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output", model_timestamp_version +  tweet_id[0] + '_' +  "_output.tar")
+        # # PATH = os.path.join(os.path.dirname(__file__), '..', "data", "bot", "output",  model_timestamp_version + "_output.tar")
+        # # time.sleep(0.1)
+        # print("Saving batch output in ", PATH)
 
-        # with open(PATH, 'wb') as f:
-        #     torch.save(output_dict, f)
+        # # with open(PATH, 'wb') as f:
+        # #     torch.save(output_dict, f)
 
-        torch.save(output_dict, os.path.join(PATH))
+        # torch.save(output_dict, os.path.join(PATH))
 
 
         # import copy
